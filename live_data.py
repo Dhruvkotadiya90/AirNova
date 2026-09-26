@@ -2,7 +2,6 @@ import requests
 
 
 def get_live_data(latitude, longitude):
-
     weather_url = "https://api.open-meteo.com/v1/forecast"
 
     weather_params = {
@@ -14,7 +13,13 @@ def get_live_data(latitude, longitude):
             "wind_speed_10m,"
             "wind_direction_10m"
         ),
-        "hourly": "boundary_layer_height",
+        "hourly": (
+    "temperature_2m,"
+    "relative_humidity_2m,"
+    "wind_speed_10m,"
+    "wind_direction_10m,"
+    "boundary_layer_height"
+),
         "forecast_hours": 72,
         "timezone": "auto"
     }
@@ -26,7 +31,6 @@ def get_live_data(latitude, longitude):
     )
 
     weather_response.raise_for_status()
-
     weather = weather_response.json()
 
     air_url = "https://air-quality-api.open-meteo.com/v1/air-quality"
@@ -57,7 +61,6 @@ def get_live_data(latitude, longitude):
     )
 
     air_response.raise_for_status()
-
     air = air_response.json()
 
     current = {
@@ -65,13 +68,23 @@ def get_live_data(latitude, longitude):
         "humidity": weather["current"]["relative_humidity_2m"],
         "wind_speed": weather["current"]["wind_speed_10m"],
         "wind_direction": weather["current"]["wind_direction_10m"],
-
         "pm25": air["current"]["pm2_5"],
         "pm10": air["current"]["pm10"],
         "o3": air["current"]["ozone"],
         "no2": air["current"]["nitrogen_dioxide"],
-
         "pbl_height": weather["hourly"]["boundary_layer_height"][0]
     }
 
-    return current
+    forecast = {
+        "time": weather["hourly"]["time"][:72],
+        "temperature": weather["hourly"]["temperature_2m"][:72],
+        "humidity": weather["hourly"]["relative_humidity_2m"][:72],
+        "wind_speed": weather["hourly"]["wind_speed_10m"][:72],
+        "pm25": air["hourly"]["pm2_5"][:72],
+        "pm10": air["hourly"]["pm10"][:72],
+        "o3": air["hourly"]["ozone"][:72],
+        "no2": air["hourly"]["nitrogen_dioxide"][:72],
+        "pbl_height": weather["hourly"]["boundary_layer_height"][:72]
+    }
+
+    return current, forecast
